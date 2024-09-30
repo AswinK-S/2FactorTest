@@ -14,8 +14,8 @@ const generateBase32Secret = () => {
 const users = [{
     "id":"01",
     "username":"user1",
-    "password":"12345"
-
+    "password":"12345",
+    "secret":"T7KFNJHHLDLBNPNA2QZBZPQZ"
 }];
 
 
@@ -52,6 +52,8 @@ exports.twoFactor = async (req, res) => {
     const base32_secret = generateBase32Secret();
     user.secret = base32_secret;
 
+    console.log("user---",user)
+
     // Generate a QR code URL for the user to scan
     let totp = new OTPAuth.TOTP({
         issuer: "YourSite.com",
@@ -84,8 +86,12 @@ exports.twoFactor = async (req, res) => {
 
 // verify 2fa code 
 exports.verify2fa = async (req, res) => {
-    const { username, token } = req.body;
+    const { username, otp } = req.body;
 
+    if(otp.trim()===''){
+        return res.json("enter valid otp")
+    }
+    console.log('length of otp-->',otp.length)
     // Find the user by username
     const user = users.find((u) => u.username === username);
 
@@ -101,9 +107,9 @@ exports.verify2fa = async (req, res) => {
         digits: 6,
         secret: user.secret,
     });
-
-    let delta = totp.validate({ token });
-
+    console.log('token--->',otp)
+    let delta = totp.validate({ otp });
+    console.log("delta--->",delta)
     if (delta) {
         res.json({
             status: "success",
